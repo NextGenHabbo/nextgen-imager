@@ -4,7 +4,7 @@ This tool serves as a server-side habbo-imager using the same avatar generator f
 
 ## Configuration
 
-First you should rename `.env.new to .env` then set your configuration. Additional options can be found in `config.json`
+First you should copy `.env.example` to `.env` then set your configuration. Additional options can be found in `config.json`
 
 Your figuredata, figuremap, effectmap, & HabboAvatarActions can safely point to a remote URL without worrying about performance.
 
@@ -41,6 +41,22 @@ NGINX Example
     	}
     }
 
+IIS Example (requires the URL Rewrite & Application Request Routing modules). See `web.config`:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration>
+        <system.webServer>
+            <rewrite>
+                <rules>
+                    <rule name="ReverseProxyInboundRule1" stopProcessing="true">
+                        <match url="(.*)" />
+                        <action type="Rewrite" url="http://localhost:3030/{R:1}" />
+                    </rule>
+                </rules>
+            </rewrite>
+        </system.webServer>
+    </configuration>
+
 ## URL paramaters
 
 Their are a few different options you may pass as URL parameters to generate figures with different actions. All parameters are optional.
@@ -57,7 +73,7 @@ Their are a few different options you may pass as URL parameters to generate fig
 | effect         | 0       | An effect id to render                                              |
 | size           | n       | The size to render, see sizes below                                 |
 | frame_num      | 0       | The frame number to render                                          |
-| img_format     | png     | A value of `png` or `gif`. Gif will render all frames of the figure |
+| img_format     | auto    | `png` or `gif`. Default is smart: `gif` for animated actions/dances, `png` otherwise. Explicit value always overrides |
 
 ## Actions
 

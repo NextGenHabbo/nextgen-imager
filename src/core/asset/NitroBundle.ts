@@ -48,14 +48,20 @@ export class NitroBundle
 
             if(fileName.endsWith('.json'))
             {
-                const decompressed = inflate((buffer.toArrayBuffer() as Data));
+                const decompressed = inflate(
+    buffer.toArrayBuffer() as unknown as Data
+);
 
                 this._jsonFile = JSON.parse(NitroBundle.TEXT_DECODER.decode(decompressed));
             }
             else
             {
-                const decompressed = inflate((buffer.toArrayBuffer() as Data));
-                const base64 = NitroBundle.arrayBufferToBase64(decompressed);
+                const decompressed = inflate(
+    buffer.toArrayBuffer() as unknown as Data
+);
+                const base64 = NitroBundle.arrayBufferToBase64(
+    decompressed.buffer as ArrayBuffer
+);
                 const baseTexture = await loadImage('data:image/png;base64,' + base64);
 
                 this._baseTexture = baseTexture;

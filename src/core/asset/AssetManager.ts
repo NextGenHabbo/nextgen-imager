@@ -98,7 +98,12 @@ export class AssetManager extends NitroManager implements IAssetManager
             {
                 this.logger.log('Downloading: ' + url);
                 const buffer = await FileUtilities.readFileAsBuffer(url);
-                const bundle = await NitroBundle.from(buffer);
+                const arrayBuffer = buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength
+) as ArrayBuffer;
+
+const bundle = await NitroBundle.from(arrayBuffer);
 
                 this.createCollectionFromNitroBundle(bundle);
             }
