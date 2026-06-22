@@ -1,7 +1,11 @@
 import { Canvas, createCanvas } from "canvas";
 import { Request, Response } from "express";
 import { writeFile } from "fs";
+const sharp = require("sharp");
 const GIFEncoder = require("gif-encoder-2");
+const UPNG = require("upng-js");
+
+const FRAME_DELAY_MS = 120;
 import { File, FileUtilities, Point } from "../../../../core";
 import { Application } from "../../../Application";
 import { AvatarScaleType, IAvatarImage } from "../../../avatar";
@@ -42,8 +46,8 @@ export const HabboImagingRouterGet = async (
       if (buffer) {
         response
           .writeHead(200, {
-            "Content-Type": buildOptions.imageFormat === "gif" ? "image/gif" : "image/png",
-            "Content-Disposition": `inline; filename="${avatarString}.${buildOptions.imageFormat}"`,
+            "Content-Type": ContentTypeForFormat(buildOptions.imageFormat),
+            "Content-Disposition": `inline; filename="${avatarString}.${FileExtForFormat(buildOptions.imageFormat)}"`,
           })
           .end(buffer);
       }
@@ -85,12 +89,18 @@ export const HabboImagingRouterGet = async (
       avatar.updateAnimationByFrames(buildOptions.frameNumber);
     }
 
-    const isGif = buildOptions.imageFormat === "gif";
-    const totalFrames = isGif ? Math.max(avatar.getTotalFrameCount(), 1) : 1;
+    const format = buildOptions.imageFormat;
+    const isGif = format === "gif";
+    const isApng = format === "apng";
+    const isWebp = format === "webp";
+    const isAnimated = isGif || isApng || isWebp;
+    const totalFrames = isAnimated ? Math.max(avatar.getTotalFrameCount(), 1) : 1;
 
     let encoder: any = null;
     let gifChunks: Buffer[] = [];
     let gifStreamEnd: Promise<void> | null = null;
+    const apngFrames: ArrayBuffer[] = [];
+    const webpFrames: Buffer[] = [];
 
     if (isGif) {
       encoder = new GIFEncoder(tempCanvas.width, tempCanvas.height);
@@ -99,7 +109,7 @@ export const HabboImagingRouterGet = async (
       gifStreamEnd = new Promise<void>((resolve) => stream.on("end", resolve));
       encoder.start();
       encoder.setRepeat(0);
-      encoder.setDelay(120);
+      encoder.setDelay(FRAME_DELAY_MS);
       encoder.setQuality(10);
       encoder.setTransparent(0xFF00FF);
     }
@@ -139,42 +149,72 @@ export const HabboImagingRouterGet = async (
       tempCtx.drawImage(canvas, avatarOffset.x, avatarOffset.y, canvas.width, canvas.height);
       ProcessAvatarSprites(tempCanvas, avatar, avatarOffset, canvasOffset.add(sizeOffset), true);
 
-      if (encoder) {
+      if (isGif && encoder) {
         encoder.addFrame(tempCtx);
+      } else if (isApng) {
+        const data = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
+        // copy: getImageData buffer is reused-safe but slice to detach
+        apngFrames.push(data.slice().buffer);
+      } else if (isWebp) {
+        webpFrames.push(tempCanvas.toBuffer("image/png"));
       }
     }
+
+    let outBuffer: Buffer;
 
     if (isGif && encoder) {
       encoder.finish();
       await gifStreamEnd;
-
-      const gifBuffer = Buffer.concat(gifChunks);
-
-      response
-        .writeHead(200, {
-          "Content-Type": "image/gif",
-          "Content-Disposition": `inline; filename="${avatarString}.gif"`,
-        })
-        .end(gifBuffer);
-
-      writeFile(saveFile.path, gifBuffer, () => {});
+      outBuffer = Buffer.concat(gifChunks);
+    } else if (isApng) {
+      const delays = new Array(apngFrames.length).fill(FRAME_DELAY_MS);
+      // cnum=0 => lossless, full 8-bit alpha
+      outBuffer = Buffer.from(UPNG.encode(apngFrames, tempCanvas.width, tempCanvas.height, 0, delays));
+    } else if (isWebp) {
+      if (webpFrames.length > 1) {
+        const delays = new Array(webpFrames.length).fill(FRAME_DELAY_MS);
+        outBuffer = await sharp(webpFrames, { join: { animated: true } })
+          .webp({ loop: 0, delay: delays, lossless: true })
+          .toBuffer();
+      } else {
+        // single frame: static webp (join requires >= 2 images)
+        outBuffer = await sharp(webpFrames[0]).webp({ lossless: true }).toBuffer();
+      }
     } else {
-      const pngBuffer = tempCanvas.toBuffer("image/png");
-
-      response
-        .writeHead(200, {
-          "Content-Type": "image/png",
-          "Content-Disposition": `inline; filename="${avatarString}.png"`,
-        })
-        .end(pngBuffer);
-
-      writeFile(saveFile.path, pngBuffer, () => {});
+      outBuffer = tempCanvas.toBuffer("image/png");
     }
+
+    response
+      .writeHead(200, {
+        "Content-Type": ContentTypeForFormat(format),
+        "Content-Disposition": `inline; filename="${avatarString}.${FileExtForFormat(format)}"`,
+      })
+      .end(outBuffer);
+
+    writeFile(saveFile.path, outBuffer, () => {});
   } catch (err) {
     Application.instance.logger.error(err.message);
     response.writeHead(500).end();
   }
 };
+
+function ContentTypeForFormat(format: string): string {
+  switch (format) {
+    case "gif": return "image/gif";
+    case "webp": return "image/webp";
+    case "apng": return "image/apng";
+    default: return "image/png";
+  }
+}
+
+function FileExtForFormat(format: string): string {
+  switch (format) {
+    case "gif": return "gif";
+    case "webp": return "webp";
+    case "apng": return "png"; // APNG uses the .png extension
+    default: return "png";
+  }
+}
 
 function ProcessAvatarSprites(
   canvas: Canvas,

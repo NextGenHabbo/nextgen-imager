@@ -11,8 +11,15 @@ const ANIMATED_ACTIONS = new Set([
 
 export const GetImageFormatRequest = (query: RequestQuery) =>
 {
+    // explicit override always wins
     if(query.img_format === 'gif') return 'gif';
     if(query.img_format === 'png') return 'png';
+    if(query.img_format === 'apng') return 'apng';
+    if(query.img_format === 'webp') return 'webp';
+
+    // effects use soft alpha (glows/shadows) that GIF's 1-bit transparency
+    // mangles; default them to animated WebP (full alpha, smaller files).
+    if(query.effect && parseInt(query.effect) > 0) return 'webp';
 
     if(query.dance) return 'gif';
 

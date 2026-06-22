@@ -14,11 +14,15 @@ You must also set an absolute path to a location where rendered figures can save
 
 ## Running the server
 
-**Make sure you run `npm i` before first use.**
+Requires **Node.js 22+**.
+
+**Make sure you run `npm i` before first use.** This also builds the native `sharp` (WebP) and `canvas` modules, so a working build toolchain is required.
 
 You must compile the server by running `npm run build`
 
 To start the server you must run `npm start`
+
+> When deploying compiled output (`dist/`) to another machine, run `npm i` there too — `sharp` and `canvas` ship native binaries that must be installed on the target.
 
 The server will run on the desired host & port as set in the config. You must setup a reverse proxy on your server to make the imager publicly accessible.
 
@@ -73,7 +77,18 @@ Their are a few different options you may pass as URL parameters to generate fig
 | effect         | 0       | An effect id to render                                              |
 | size           | n       | The size to render, see sizes below                                 |
 | frame_num      | 0       | The frame number to render                                          |
-| img_format     | auto    | `png` or `gif`. Default is smart: `gif` for animated actions/dances, `png` otherwise. Explicit value always overrides |
+| img_format     | auto    | `png`, `gif`, `apng`, or `webp`. Default is smart: `webp` for effects, `gif` for animated actions/dances, `png` otherwise. `apng`/`webp` support full alpha (effects). Explicit value always overrides |
+
+## Image Formats
+
+| format | animated | alpha       | notes                                                        |
+| ------ | -------- | ----------- | ------------------------------------------------------------ |
+| png    | no       | full        | default for static figures                                   |
+| gif    | yes      | 1-bit       | default for animated actions/dances; soft alpha not supported|
+| apng   | yes      | full 8-bit  | lossless; saved as a `.png` file (APNG is a PNG container)   |
+| webp   | yes      | full 8-bit  | lossless; default for effects; smaller than gif              |
+
+The format is chosen automatically (see `img_format` above) but can always be forced with `&img_format=`. Effects use soft alpha (glows/shadows), so they default to `webp`; force `gif` only if you need maximum client compatibility.
 
 ## Actions
 
@@ -134,5 +149,5 @@ To hold a certain drink, use an equal separator with the hand item id. You can o
 
 ## Known Issues
 
--   GIFs are only able to render 1 bit alpha channels, therefore most effects will not correctly render due to using many different alpha values.
+-   GIFs are only able to render 1 bit alpha channels, so effects using soft alpha (glows/shadows) will not render correctly as a GIF. Use `img_format=apng` or `img_format=webp` for full alpha; effects default to `webp` automatically.
 -   The rendered canvas size may not match habbos imager exactly, we will hopefully have this addressed soon.
