@@ -4,6 +4,7 @@ import { RequestQuery } from '../RequestQuery';
 import { ProcessCarryAction } from './ProcessCarryAction';
 import { ProcessExpressionAction } from './ProcessExpressionAction';
 import { ProcessPostureAction } from './ProcessPostureAction';
+import { ProcessSixSevenAction } from './ProcessSixSevenAction';
 
 export const ProcessActionRequest = (query: RequestQuery, avatar: IAvatarImage) =>
 {
@@ -16,5 +17,7 @@ export const ProcessActionRequest = (query: RequestQuery, avatar: IAvatarImage) 
         if(ProcessExpressionAction(action, avatar)) continue;
 
         if(ProcessCarryAction(action, avatar)) continue;
+
+        if(ProcessSixSevenAction(action, avatar)) continue;
     }
 }

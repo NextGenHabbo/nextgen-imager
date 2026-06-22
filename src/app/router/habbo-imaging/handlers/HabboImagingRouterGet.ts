@@ -86,7 +86,7 @@ export const HabboImagingRouterGet = async (
     }
 
     const isGif = buildOptions.imageFormat === "gif";
-    const totalFrames = isGif ? 8 : 1;
+    const totalFrames = isGif ? Math.max(avatar.getTotalFrameCount(), 1) : 1;
 
     let encoder: any = null;
     let gifChunks: Buffer[] = [];

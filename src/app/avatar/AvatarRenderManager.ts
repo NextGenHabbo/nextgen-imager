@@ -5,7 +5,7 @@ import { AvatarAssetDownloadManager } from './AvatarAssetDownloadManager';
 import { AvatarFigureContainer } from './AvatarFigureContainer';
 import { AvatarImage } from './AvatarImage';
 import { AvatarStructure } from './AvatarStructure';
-import { HabboAvatarAnimations, HabboAvatarGeometry, HabboAvatarPartSets } from './data';
+import { HabboAvatarAnimations, HabboAvatarGeometry, HabboAvatarPartSets, HabboAvatarSixSeven } from './data';
 import { EffectAssetDownloadManager } from './EffectAssetDownloadManager';
 import { AvatarSetType } from './enum';
 import { FigureDataContainer } from './FigureDataContainer';
@@ -46,6 +46,7 @@ export class AvatarRenderManager extends NitroManager implements IAvatarRenderMa
         this._structure.initPartSets(HabboAvatarPartSets.partSets);
         this._structure.initAnimation(HabboAvatarAnimations.animations);
         await this.loadActions();
+        this._structure.registerAnimation(HabboAvatarSixSeven);
         await this.loadFigureData();
 
         this._aliasCollection = new AssetAliasCollection(this, this._assets);

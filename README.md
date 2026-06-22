@@ -99,6 +99,12 @@ Example: `&action=wlk,wav,drk=1`
 | laugh    | Renders the laughing expression |
 | respect  | Renders the respect expression  |
 
+##### Custom
+
+| key          | description                                                  |
+| ------------ | ------------------------------------------------------------ |
+| sixseven, 67 | Renders the "67" meme gesture (animated, defaults to a GIF)  |
+
 ##### Carry / Drink
 
 To hold a certain drink, use an equal separator with the hand item id. You can only render one of these options at a time

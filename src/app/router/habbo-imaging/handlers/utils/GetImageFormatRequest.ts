@@ -6,6 +6,7 @@ const ANIMATED_ACTIONS = new Set([
     'blow', 'cry', 'idle', 'laugh', 'respect', 'ridejump', 'sbollie', 'sb360', // expressions
     'talk', 'typing', 'blink',                                                   // misc animated
     'swdieback', 'swdiefront', 'swpick', 'swrun', 'swthrow',                    // snowwar
+    'sixseven', '67',                                                           // 67 meme gesture
 ]);
 
 export const GetImageFormatRequest = (query: RequestQuery) =>
