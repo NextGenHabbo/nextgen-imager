@@ -77,7 +77,7 @@ Their are a few different options you may pass as URL parameters to generate fig
 | effect         | 0       | An effect id to render                                              |
 | size           | n       | The size to render, see sizes below                                 |
 | frame_num      | 0       | The frame number to render                                          |
-| img_format     | auto    | `png`, `gif`, `apng`, or `webp`. Default is smart: `webp` for effects, `gif` for animated actions/dances, `png` otherwise. `apng`/`webp` support full alpha (effects). Explicit value always overrides |
+| img_format     | auto    | `png`, `gif`, `apng`, or `webp`. Default is smart: `webp` for anything animated (actions/dances/effects), `png` for static. `webp`/`apng` give full alpha and avoid GIF flicker. Force `&img_format=gif` for legacy compatibility. Explicit value always overrides |
 
 ## Image Formats
 
@@ -88,7 +88,7 @@ Their are a few different options you may pass as URL parameters to generate fig
 | apng   | yes      | full 8-bit  | lossless; saved as a `.png` file (APNG is a PNG container)   |
 | webp   | yes      | full 8-bit  | lossless; default for effects; smaller than gif              |
 
-The format is chosen automatically (see `img_format` above) but can always be forced with `&img_format=`. Effects use soft alpha (glows/shadows), so they default to `webp`; force `gif` only if you need maximum client compatibility.
+The format is chosen automatically (see `img_format` above) but can always be forced with `&img_format=`. Anything animated (actions, dances, effects) defaults to `webp` — it has full alpha and avoids GIF's per-frame palette flicker on faces/hands/feet. Force `&img_format=gif` only if you need maximum legacy-client compatibility.
 
 ## Actions
 
@@ -118,7 +118,7 @@ Example: `&action=wlk,wav,drk=1`
 
 | key          | description                                                  |
 | ------------ | ------------------------------------------------------------ |
-| sixseven, 67 | Renders the "67" meme gesture (animated, defaults to a GIF)  |
+| sixseven, 67 | Renders the "67" meme gesture (animated, defaults to WebP)   |
 
 ##### Carry / Drink
 

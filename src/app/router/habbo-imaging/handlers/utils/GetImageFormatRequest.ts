@@ -17,17 +17,19 @@ export const GetImageFormatRequest = (query: RequestQuery) =>
     if(query.img_format === 'apng') return 'apng';
     if(query.img_format === 'webp') return 'webp';
 
-    // effects use soft alpha (glows/shadows) that GIF's 1-bit transparency
-    // mangles; default them to animated WebP (full alpha, smaller files).
+    // Animated output defaults to WebP (full alpha, lossless, smaller, and
+    // free of GIF's per-frame palette flicker). GIF's 1-bit transparency
+    // mangles soft effect glows/shadows and shimmers anti-aliased edges.
+    // Force &img_format=gif for maximum legacy-client compatibility.
     if(query.effect && parseInt(query.effect) > 0) return 'webp';
 
-    if(query.dance) return 'gif';
+    if(query.dance) return 'webp';
 
     if(query.action)
     {
         const actions = query.action.split(',').map(a => a.split('=')[0].toLowerCase());
 
-        if(actions.some(a => ANIMATED_ACTIONS.has(a))) return 'gif';
+        if(actions.some(a => ANIMATED_ACTIONS.has(a))) return 'webp';
     }
 
     return 'png';
